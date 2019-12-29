@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import software.amazon.awssdk.core.async.AsyncRequestBody
+import software.amazon.awssdk.core.exception.SdkClientException
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest
 import software.amazon.awssdk.services.s3.model.AbortMultipartUploadResponse
@@ -18,6 +19,7 @@ import software.amazon.awssdk.services.s3.model.UploadPartResponse
 import java.io.ByteArrayInputStream
 import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class S3OutputStreamTest {
     private val uploadID = "upload-id"
@@ -99,6 +101,40 @@ class S3OutputStreamTest {
             }
         }
         verify(exactly = 0) {
+            s3.abortMultipartUpload(
+                AbortMultipartUploadRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .uploadId(uploadID)
+                    .build()
+            )
+        }
+    }
+
+    @Test
+    fun testFailure() {
+        every {
+            s3.uploadPart(
+                UploadPartRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .uploadId(uploadID)
+                    .contentLength(32)
+                    .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
+                    .partNumber(1)
+                    .build(), any<AsyncRequestBody>()
+            )
+        } throws SdkClientException.create("write timeout")
+
+        assertFailsWith<SdkClientException> {
+            ByteArrayInputStream(ByteArray(32)).use { target ->
+                S3OutputStream(bucket = bucket, key = key, s3 = s3).use { stream ->
+                    target.copyTo(stream)
+                }
+            }
+        }
+
+        verify(exactly = 1) {
             s3.abortMultipartUpload(
                 AbortMultipartUploadRequest.builder()
                     .bucket(bucket)

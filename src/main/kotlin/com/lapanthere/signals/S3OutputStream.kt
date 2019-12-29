@@ -101,7 +101,7 @@ class S3OutputStream(
     private val scope = CoroutineScope(Dispatchers.IO)
     private val semaphore = Semaphore(parallelism)
 
-    // Could be replaced by a Flow, once parallel execution is supported.
+    // Might be replaceable by a Flow, once parallel execution is supported.
     private val parts = mutableListOf<Deferred<CompletedPart>>()
     private val buffer = ByteArrayOutputStream(MIN_PART_SIZE.toInt())
     private val digest = DigestOutputStream(buffer, MessageDigest.getInstance("MD5"))

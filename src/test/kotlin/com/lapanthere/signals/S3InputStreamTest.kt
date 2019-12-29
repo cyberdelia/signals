@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import software.amazon.awssdk.core.ResponseBytes
+import software.amazon.awssdk.core.exception.SdkClientException
 import software.amazon.awssdk.core.internal.async.ByteArrayAsyncResponseTransformer
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
@@ -13,6 +14,7 @@ import software.amazon.awssdk.services.s3.model.HeadObjectResponse
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class S3InputStreamTest {
     private val bucket = "bucket"
@@ -86,6 +88,27 @@ class S3InputStreamTest {
                     .range("bytes=5242880-10485759")
                     .build(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
+        }
+    }
+
+    @Test
+    fun testFailure() {
+        every {
+            s3.getObject(
+                GetObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .range("bytes=0-5242879")
+                    .build(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+            )
+        } throws SdkClientException.create("read timeout")
+
+        assertFailsWith<SdkClientException> {
+            ByteArrayOutputStream().use { target ->
+                S3InputStream(bucket = bucket, key = key, s3 = s3).use { stream ->
+                    stream.copyTo(target)
+                }
+            }
         }
     }
 }
