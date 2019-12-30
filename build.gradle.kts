@@ -1,11 +1,16 @@
+import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.3.61"
+    kotlin("jvm") version "1.3.61"
     `java-library`
+    `maven-publish`
 
     id("org.jmailen.kotlinter") version "2.2.0"
+    id("org.jetbrains.dokka") version "0.10.0"
 }
+
+group = "com.lapanthere"
 
 repositories {
     jcenter()
@@ -31,8 +36,31 @@ dependencies {
     testImplementation("io.mockk:mockk:1.9.3")
 }
 
+publishing {
+    repositories {
+        maven {
+            name = "Github"
+            url = uri("https://maven.pkg.github.com/cyberdelia/signals")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+
+    publications {
+        create<MavenPublication>("default") {
+            from(components["java"])
+        }
+    }
+}
+
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+tasks.withType<DokkaTask> {
+    outputFormat = "gfm"
 }
 
 kotlinter {
