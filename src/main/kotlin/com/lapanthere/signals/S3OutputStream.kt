@@ -1,5 +1,6 @@
 package com.lapanthere.signals
 
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -124,7 +125,7 @@ class S3OutputStream(
         semaphore.acquire()
         size = min(size + size / 1000, MAX_PART_SIZE)
         val part = Part(uploadID, parts.size + 1, digest, buffer)
-        parts.add(scope.async {
+        parts.add(scope.async(CoroutineName("part-${part.partNumber}")) {
             val response = s3.uploadPart(
                 UploadPartRequest.builder()
                     .bucket(bucket)

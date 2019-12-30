@@ -1,11 +1,12 @@
 package com.lapanthere.signals
 
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Semaphore
 import software.amazon.awssdk.core.async.AsyncResponseTransformer
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
@@ -34,9 +35,6 @@ class S3InputStream(
     s3: S3AsyncClient = S3AsyncClient.create()
 ) : InputStream() {
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val semaphore = Semaphore(parallelism)
-
-    // Could be replaced by a Flow, once parallel execution is supported.
     private val streams by lazy {
         val size = s3.headObject(
             HeadObjectRequest.builder()
@@ -45,9 +43,8 @@ class S3InputStream(
                 .build()
         ).get().contentLength()
         val chunkSize = min(MIN_PART_SIZE, size)
-        (0 until size step chunkSize).map { begin ->
-            scope.async(Dispatchers.IO) {
-                semaphore.acquire()
+        (0 until size step chunkSize).mapIndexed { i, begin ->
+            scope.async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
                 s3.getObject(
                     GetObjectRequest.builder()
                         .bucket(bucket)
@@ -62,14 +59,13 @@ class S3InputStream(
         private val iterator = streams.iterator()
 
         override fun hasMoreElements(): Boolean {
+            // Starts downloading the next chunks ahead.
+            streams.take(parallelism).forEach { it.start() }
             return iterator.hasNext()
         }
 
         override fun nextElement(): InputStream = runBlocking {
-            semaphore.release()
-            val stream = iterator.next().await()
-            iterator.remove() // Making sure the stream get released.
-            stream
+            iterator.use { it.await() }
         }
     })
 
@@ -79,5 +75,13 @@ class S3InputStream(
 
     override fun close() {
         buffer.close()
+    }
+}
+
+internal inline fun <T, R> MutableIterator<T>.use(block: (T) -> R): R {
+    try {
+        return block(this.next())
+    } finally {
+        this.remove()
     }
 }

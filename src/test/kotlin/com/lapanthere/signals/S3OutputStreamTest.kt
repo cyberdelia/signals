@@ -94,7 +94,7 @@ class S3OutputStreamTest {
     }
 
     @Test
-    fun testWrite() {
+    fun testUpload() {
         ByteArrayInputStream(ByteArray(32)).use { target ->
             S3OutputStream(bucket = bucket, key = key, s3 = s3).use { stream ->
                 target.copyTo(stream)
