@@ -90,25 +90,25 @@ internal data class Part(
  * @param key Object key for which the multipart upload is to be initiated.
  * @param parallelism The number of parts to upload at a time.
  * @param s3 The S3 client to be used during the upload.
+ * @param mutator The function that mutates the request given to the S3 client.
  *
  */
-// TODO: Allow for ACLs and others options.
 class S3OutputStream(
     private val bucket: String,
     private val key: String,
     parallelism: Int = AVAILABLE_PROCESSORS,
-    private val s3: S3AsyncClient = S3AsyncClient.create()
+    private val s3: S3AsyncClient = S3AsyncClient.create(),
+    mutator: (CreateMultipartUploadRequest.Builder) -> Unit = {}
 ) : OutputStream() {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val semaphore = Semaphore(parallelism)
-
-    // Might be replaceable by a Flow, once parallel execution is supported.
     private val parts = mutableListOf<Deferred<CompletedPart>>()
     private val buffer = ByteArrayOutputStream(MIN_PART_SIZE.toInt())
     private val digest = DigestOutputStream(buffer, MessageDigest.getInstance("MD5"))
     private var size: Long = MIN_PART_SIZE
     private val uploadID = s3.createMultipartUpload(
         CreateMultipartUploadRequest.builder()
+            .applyMutation(mutator)
             .bucket(bucket)
             .key(key)
             .build()

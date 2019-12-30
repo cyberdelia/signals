@@ -25,14 +25,15 @@ internal val AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors()
  * @param key Key of the object to download.
  * @param parallelism The number of parts to download at a time.
  * @param s3 The S3 client to be used during the download.
+ * @param mutator The function that mutates the request given to the S3 client.
  *
  */
-// TODO: Allow to pass others options.
 class S3InputStream(
     bucket: String,
     key: String,
     parallelism: Int = AVAILABLE_PROCESSORS,
-    s3: S3AsyncClient = S3AsyncClient.create()
+    s3: S3AsyncClient = S3AsyncClient.create(),
+    mutator: (GetObjectRequest.Builder) -> Unit = {}
 ) : InputStream() {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val streams by lazy {
@@ -47,6 +48,7 @@ class S3InputStream(
             scope.async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
                 s3.getObject(
                     GetObjectRequest.builder()
+                        .applyMutation(mutator)
                         .bucket(bucket)
                         .key(key)
                         .range("bytes=$begin-${begin + chunkSize - 1}")
