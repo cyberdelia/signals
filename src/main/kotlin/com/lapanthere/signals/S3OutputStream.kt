@@ -1,4 +1,5 @@
 @file:JvmMultifileClass
+
 package com.lapanthere.signals
 
 import kotlinx.coroutines.CoroutineName
@@ -26,62 +27,6 @@ import java.io.OutputStream
 import java.security.DigestOutputStream
 import java.security.MessageDigest
 import java.util.Base64
-import kotlin.math.min
-
-internal const val MIN_PART_SIZE: Long = 5_242_880L
-internal const val MAX_PART_SIZE: Long = 5_368_709_120L
-
-internal data class Part(
-    val uploadID: String,
-    val partNumber: Int,
-    val digest: ByteArray,
-    val buffer: ByteArray
-) {
-    val eTag: String = digest.toHex()
-    val contentMD5: String = digest.encodeToString()
-
-    constructor(uploadID: String, partNumber: Int, digest: DigestOutputStream, buffer: ByteArrayOutputStream) : this(
-        uploadID,
-        partNumber,
-        digest.digest,
-        buffer.toByteArray()
-    )
-
-    fun toCompletedPart(): CompletedPart = CompletedPart.builder()
-        .eTag(eTag)
-        .partNumber(partNumber)
-        .build()
-
-    override fun toString(): String {
-        return "Part(uploadID=$uploadID, partNumber=$partNumber, eTag=$eTag}"
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Part
-
-        if (uploadID != other.uploadID) return false
-        if (partNumber != other.partNumber) return false
-        if (!digest.contentEquals(other.digest)) return false
-        if (!buffer.contentEquals(other.buffer)) return false
-        if (eTag != other.eTag) return false
-        if (contentMD5 != other.contentMD5) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = uploadID.hashCode()
-        result = 31 * result + partNumber
-        result = 31 * result + digest.contentHashCode()
-        result = 31 * result + buffer.contentHashCode()
-        result = 31 * result + eTag.hashCode()
-        result = 31 * result + contentMD5.hashCode()
-        return result
-    }
-}
 
 /**
  *
@@ -106,7 +51,7 @@ class S3OutputStream(
     private val parts = mutableListOf<Deferred<CompletedPart>>()
     private val buffer = ByteArrayOutputStream(MIN_PART_SIZE.toInt())
     private val digest = DigestOutputStream(buffer, MessageDigest.getInstance("MD5"))
-    private var partSize: Long = MIN_PART_SIZE
+    private val partSize = SizeIterator()
     private val uploadID = s3.createMultipartUpload(
         CreateMultipartUploadRequest.builder()
             .applyMutation(mutator)
@@ -117,14 +62,14 @@ class S3OutputStream(
 
     override fun write(b: Int) {
         digest.write(b)
-        if (buffer.size() >= partSize) {
+        if (buffer.size() >= partSize.value) {
             uploadPart()
         }
     }
 
     private fun uploadPart() = runBlocking {
         semaphore.acquire()
-        partSize = min(partSize + partSize / 1000, MAX_PART_SIZE)
+        partSize.next()
         val part = Part(uploadID, parts.size + 1, digest, buffer)
         parts.add(scope.async(CoroutineName("part-${part.partNumber}")) {
             val response = s3.uploadPart(

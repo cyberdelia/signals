@@ -14,7 +14,6 @@ import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import java.io.InputStream
 import java.io.SequenceInputStream
 import java.util.Enumeration
-import kotlin.math.min
 
 internal val AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors()
 
@@ -36,21 +35,14 @@ class S3InputStream(
     mutator: (GetObjectRequest.Builder) -> Unit = {}
 ) : InputStream() {
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val parts = sequence {
-        val size = s3.headObject(
+    private val parts = byteRange(
+        s3.headObject(
             HeadObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
                 .build()
         ).get().contentLength()
-        var chunkSize = min(MIN_PART_SIZE, size)
-        var begin = 0L
-        while (begin < size) {
-            yield(Pair(begin, begin + chunkSize - 1))
-            begin += chunkSize
-            chunkSize = min(chunkSize + chunkSize / 1000, MAX_PART_SIZE)
-        }
-    }
+    )
     private val streams = parts.mapIndexed { i, (begin, end) ->
         scope.async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
             s3.getObject(
