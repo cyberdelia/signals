@@ -1,3 +1,4 @@
+@file:JvmMultifileClass
 package com.lapanthere.signals
 
 import kotlinx.coroutines.CoroutineName
@@ -28,7 +29,7 @@ import java.util.Base64
 import kotlin.math.min
 
 internal const val MIN_PART_SIZE: Long = 5_242_880L
-private const val MAX_PART_SIZE: Long = 5_368_709_120L
+internal const val MAX_PART_SIZE: Long = 5_368_709_120L
 
 internal data class Part(
     val uploadID: String,
@@ -105,7 +106,7 @@ class S3OutputStream(
     private val parts = mutableListOf<Deferred<CompletedPart>>()
     private val buffer = ByteArrayOutputStream(MIN_PART_SIZE.toInt())
     private val digest = DigestOutputStream(buffer, MessageDigest.getInstance("MD5"))
-    private var size: Long = MIN_PART_SIZE
+    private var partSize: Long = MIN_PART_SIZE
     private val uploadID = s3.createMultipartUpload(
         CreateMultipartUploadRequest.builder()
             .applyMutation(mutator)
@@ -116,14 +117,14 @@ class S3OutputStream(
 
     override fun write(b: Int) {
         digest.write(b)
-        if (buffer.size() >= size) {
+        if (buffer.size() >= partSize) {
             uploadPart()
         }
     }
 
     private fun uploadPart() = runBlocking {
         semaphore.acquire()
-        size = min(size + size / 1000, MAX_PART_SIZE)
+        partSize = min(partSize + partSize / 1000, MAX_PART_SIZE)
         val part = Part(uploadID, parts.size + 1, digest, buffer)
         parts.add(scope.async(CoroutineName("part-${part.partNumber}")) {
             val response = s3.uploadPart(

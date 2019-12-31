@@ -36,27 +36,33 @@ class S3InputStream(
     mutator: (GetObjectRequest.Builder) -> Unit = {}
 ) : InputStream() {
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val streams by lazy {
+    private val parts = sequence {
         val size = s3.headObject(
             HeadObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
                 .build()
         ).get().contentLength()
-        val chunkSize = min(MIN_PART_SIZE, size)
-        (0 until size step chunkSize).mapIndexed { i, begin ->
-            scope.async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
-                s3.getObject(
-                    GetObjectRequest.builder()
-                        .applyMutation(mutator)
-                        .bucket(bucket)
-                        .key(key)
-                        .range("bytes=$begin-${begin + chunkSize - 1}")
-                        .build(), AsyncResponseTransformer.toBytes()
-                ).await().asInputStream()
-            }
-        }.toMutableList()
+        var chunkSize = min(MIN_PART_SIZE, size)
+        var begin = 0L
+        while (begin < size) {
+            yield(Pair(begin, begin + chunkSize - 1))
+            begin += chunkSize
+            chunkSize = min(chunkSize + chunkSize / 1000, MAX_PART_SIZE)
+        }
     }
+    private val streams = parts.mapIndexed { i, (begin, end) ->
+        scope.async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
+            s3.getObject(
+                GetObjectRequest.builder()
+                    .applyMutation(mutator)
+                    .bucket(bucket)
+                    .key(key)
+                    .range("bytes=$begin-$end")
+                    .build(), AsyncResponseTransformer.toBytes()
+            ).await().asInputStream()
+        }
+    }.toMutableList()
     private val buffer = SequenceInputStream(object : Enumeration<InputStream> {
         private val iterator = streams.iterator()
 
