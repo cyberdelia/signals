@@ -1,3 +1,4 @@
+@file:JvmMultifileClass
 package com.lapanthere.signals
 
 import software.amazon.awssdk.services.s3.model.CompletedPart

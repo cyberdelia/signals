@@ -1,5 +1,3 @@
-@file:JvmMultifileClass
-
 package com.lapanthere.signals
 
 import kotlinx.coroutines.CoroutineName
