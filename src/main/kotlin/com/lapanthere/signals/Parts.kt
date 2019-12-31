@@ -8,13 +8,14 @@ import kotlin.math.min
 
 internal const val MIN_PART_SIZE: Long = 5_242_880L
 private const val MAX_PART_SIZE: Long = 5_368_709_120L
+private const val GROWTH_FACTOR: Long = 1530L
 
 private val chunkSize
     get() = sequence {
         var chunkSize = MIN_PART_SIZE
         while (true) {
             yield(chunkSize)
-            chunkSize = min(chunkSize + chunkSize / 1000, MAX_PART_SIZE)
+            chunkSize = min(chunkSize + chunkSize / GROWTH_FACTOR, MAX_PART_SIZE)
         }
     }
 

@@ -48,7 +48,7 @@ class S3InputStreamTest {
                 GetObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .range("bytes=5242880-10491001")
+                    .range("bytes=5242880-10489185")
                     .build(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
         } returns CompletableFuture.completedFuture(
@@ -85,7 +85,7 @@ class S3InputStreamTest {
                 GetObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .range("bytes=5242880-10491001")
+                    .range("bytes=5242880-10489185")
                     .build(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
         }
