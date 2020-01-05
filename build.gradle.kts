@@ -5,12 +5,18 @@ plugins {
     kotlin("jvm") version "1.3.61"
     `java-library`
     `maven-publish`
+    maven
+    application
 
     id("org.jmailen.kotlinter") version "2.2.0"
     id("org.jetbrains.dokka") version "0.10.0"
 }
 
 group = "com.lapanthere"
+
+application {
+    mainClassName = "com.lapanthere.signals.SignalsKt"
+}
 
 repositories {
     jcenter()
@@ -61,6 +67,12 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<DokkaTask> {
     outputFormat = "gfm"
+}
+
+task("pom") {
+    doLast {
+        maven.pom().writeTo("pom.xml")
+    }
 }
 
 kotlinter {
