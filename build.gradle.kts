@@ -5,18 +5,12 @@ plugins {
     kotlin("jvm") version "1.3.61"
     `java-library`
     `maven-publish`
-    maven
-    application
 
     id("org.jmailen.kotlinter") version "2.2.0"
     id("org.jetbrains.dokka") version "0.10.0"
 }
 
 group = "com.lapanthere"
-
-application {
-    mainClassName = "com.lapanthere.signals.SignalsKt"
-}
 
 repositories {
     jcenter()
@@ -57,6 +51,16 @@ publishing {
     publications {
         create<MavenPublication>("default") {
             from(components["java"])
+            pom {
+                name.set("Signals")
+                description.set("S3 Streaming Client")
+                url.set("https://github.com/cyberdelia/signals")
+                scm {
+                    connection.set("scm:git:git://github.com/cyberdelia/signals.git")
+                    developerConnection.set("scm:git:ssh://github.com/cyberdelia/signals.git")
+                    url.set("https://github.com/cyberdelia/signals")
+                }
+            }
         }
     }
 }
@@ -67,12 +71,6 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<DokkaTask> {
     outputFormat = "gfm"
-}
-
-task("pom") {
-    doLast {
-        maven.pom().writeTo("pom.xml")
-    }
 }
 
 kotlinter {
