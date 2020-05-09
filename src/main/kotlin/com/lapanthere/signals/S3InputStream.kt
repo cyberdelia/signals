@@ -27,7 +27,7 @@ internal val AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors()
  * @param mutator The function that mutates the request given to the S3 client.
  *
  */
-class S3InputStream(
+public class S3InputStream(
     bucket: String,
     key: String,
     parallelism: Int = AVAILABLE_PROCESSORS,

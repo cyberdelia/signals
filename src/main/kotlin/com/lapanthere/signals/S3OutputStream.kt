@@ -37,7 +37,7 @@ import java.util.Base64
  * @param mutator The function that mutates the request given to the S3 client.
  *
  */
-class S3OutputStream(
+public class S3OutputStream(
     private val bucket: String,
     private val key: String,
     parallelism: Int = AVAILABLE_PROCESSORS,
