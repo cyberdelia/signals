@@ -24,12 +24,12 @@ dependencies {
     implementation(kotlin("test", kotlinVersion))
     implementation(kotlin("test-junit", kotlinVersion))
 
-    val coroutineVersion = "1.3.5"
+    val coroutineVersion = "1.3.7"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutineVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineVersion")
 
-    val awsVersion = "2.13.13"
+    val awsVersion = "2.13.23"
     implementation("software.amazon.awssdk:s3:$awsVersion")
     testImplementation("software.amazon.awssdk:sts:$awsVersion")
 
