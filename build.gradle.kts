@@ -36,33 +36,9 @@ dependencies {
     testImplementation("io.mockk:mockk:1.10.0")
 }
 
-publishing {
-    repositories {
-        maven {
-            name = "Github"
-            url = uri("https://maven.pkg.github.com/cyberdelia/signals")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
-    }
-
-    publications {
-        create<MavenPublication>("default") {
-            from(components["java"])
-            pom {
-                name.set("Signals")
-                description.set("S3 Streaming Client")
-                url.set("https://github.com/cyberdelia/signals")
-                scm {
-                    connection.set("scm:git:git://github.com/cyberdelia/signals.git")
-                    developerConnection.set("scm:git:ssh://github.com/cyberdelia/signals.git")
-                    url.set("https://github.com/cyberdelia/signals")
-                }
-            }
-        }
-    }
+tasks.register<Jar>("sourcesJar") {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
 }
 
 tasks.named<KotlinCompile>("compileKotlin") {
@@ -79,4 +55,43 @@ tasks.withType<DokkaTask> {
 
 kotlinter {
     disabledRules = arrayOf("import-ordering")
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "Github"
+            url = uri("https://maven.pkg.github.com/cyberdelia/signals")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+
+        maven {
+            name = "Bintray"
+            url = uri("https://api.bintray.com/maven/cyberdelia/lapanthere/signals/;publish=1")
+            credentials {
+                username = System.getenv("BINTRAY_USERNAME")
+                password = System.getenv("BINTRAY_TOKEN")
+            }
+        }
+    }
+
+    publications {
+        create<MavenPublication>("default") {
+            from(components["java"])
+            artifact(tasks["sourcesJar"])
+            pom {
+                name.set("Signals")
+                description.set("S3 Streaming Client")
+                url.set("https://github.com/cyberdelia/signals")
+                scm {
+                    connection.set("scm:git:git://github.com/cyberdelia/signals.git")
+                    developerConnection.set("scm:git:ssh://github.com/cyberdelia/signals.git")
+                    url.set("https://github.com/cyberdelia/signals")
+                }
+            }
+        }
+    }
 }
