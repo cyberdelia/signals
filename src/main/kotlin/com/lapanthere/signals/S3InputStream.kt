@@ -51,7 +51,8 @@ public class S3InputStream(
                     .bucket(bucket)
                     .key(key)
                     .range("bytes=$begin-$end")
-                    .build(), AsyncResponseTransformer.toBytes()
+                    .build(),
+                AsyncResponseTransformer.toBytes()
             ).await().asInputStream()
         }
     }.toMutableList()

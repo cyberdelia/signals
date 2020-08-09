@@ -48,7 +48,8 @@ class S3OutputStreamTest {
                     .contentLength(32)
                     .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
                     .partNumber(1)
-                    .build(), any<AsyncRequestBody>()
+                    .build(),
+                any<AsyncRequestBody>()
             )
         } returns CompletableFuture.completedFuture(
             UploadPartResponse.builder()
@@ -103,29 +104,40 @@ class S3OutputStreamTest {
         }
 
         verify {
-            s3.createMultipartUpload(CreateMultipartUploadRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build())
-            s3.uploadPart(UploadPartRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .contentLength(32)
-                .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
-                .partNumber(1)
-                .uploadId(uploadID)
-                .build(), any<AsyncRequestBody>())
-            s3.completeMultipartUpload(CompleteMultipartUploadRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .uploadId(uploadID)
-                .multipartUpload(CompletedMultipartUpload.builder()
-                    .parts(CompletedPart.builder()
-                        .eTag("70bc8f4b72a86921468bf8e8441dce51")
-                        .partNumber(1)
-                        .build())
-                    .build())
-                .build())
+            s3.createMultipartUpload(
+                CreateMultipartUploadRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build()
+            )
+            s3.uploadPart(
+                UploadPartRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .contentLength(32)
+                    .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
+                    .partNumber(1)
+                    .uploadId(uploadID)
+                    .build(),
+                any<AsyncRequestBody>()
+            )
+            s3.completeMultipartUpload(
+                CompleteMultipartUploadRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .uploadId(uploadID)
+                    .multipartUpload(
+                        CompletedMultipartUpload.builder()
+                            .parts(
+                                CompletedPart.builder()
+                                    .eTag("70bc8f4b72a86921468bf8e8441dce51")
+                                    .partNumber(1)
+                                    .build()
+                            )
+                            .build()
+                    )
+                    .build()
+            )
         }
 
         verify(exactly = 0) {
@@ -152,7 +164,8 @@ class S3OutputStreamTest {
                     .contentLength(32)
                     .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
                     .partNumber(1)
-                    .build(), any<AsyncRequestBody>()
+                    .build(),
+                any<AsyncRequestBody>()
             )
         } throws SdkClientException.create("write timeout")
 
@@ -165,18 +178,23 @@ class S3OutputStreamTest {
         }
 
         verify {
-            s3.createMultipartUpload(CreateMultipartUploadRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build())
-            s3.uploadPart(UploadPartRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .contentLength(32)
-                .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
-                .partNumber(1)
-                .uploadId(uploadID)
-                .build(), any<AsyncRequestBody>())
+            s3.createMultipartUpload(
+                CreateMultipartUploadRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build()
+            )
+            s3.uploadPart(
+                UploadPartRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .contentLength(32)
+                    .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
+                    .partNumber(1)
+                    .uploadId(uploadID)
+                    .build(),
+                any<AsyncRequestBody>()
+            )
         }
 
         verify(exactly = 1) {

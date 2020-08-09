@@ -38,7 +38,8 @@ class S3InputStreamTest {
                     .bucket(bucket)
                     .key(key)
                     .range("bytes=0-5242879")
-                    .build(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                    .build(),
+                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
         } returns CompletableFuture.completedFuture(
             ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), ByteArray(32))
@@ -49,7 +50,8 @@ class S3InputStreamTest {
                     .bucket(bucket)
                     .key(key)
                     .range("bytes=5242880-10489185")
-                    .build(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                    .build(),
+                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
         } returns CompletableFuture.completedFuture(
             ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), ByteArray(32))
@@ -77,7 +79,8 @@ class S3InputStreamTest {
                     .bucket(bucket)
                     .key(key)
                     .range("bytes=0-5242879")
-                    .build(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                    .build(),
+                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
         }
         verify(exactly = 1) {
@@ -86,7 +89,8 @@ class S3InputStreamTest {
                     .bucket(bucket)
                     .key(key)
                     .range("bytes=5242880-10489185")
-                    .build(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                    .build(),
+                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
         }
     }
@@ -99,7 +103,8 @@ class S3InputStreamTest {
                     .bucket(bucket)
                     .key(key)
                     .range("bytes=0-5242879")
-                    .build(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                    .build(),
+                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
         } throws SdkClientException.create("read timeout")
 

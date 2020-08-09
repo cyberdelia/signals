@@ -69,23 +69,26 @@ public class S3OutputStream(
         semaphore.acquire()
         partSize.next()
         val part = Part(uploadID, parts.size + 1, digest, buffer)
-        parts.add(scope.async(CoroutineName("part-${part.partNumber}")) {
-            val response = s3.uploadPart(
-                UploadPartRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .partNumber(part.partNumber)
-                    .uploadId(uploadID)
-                    .contentMD5(part.contentMD5)
-                    .contentLength(part.buffer.size.toLong())
-                    .build(), AsyncRequestBody.fromBytes(part.buffer)
-            ).await()
-            if (response.eTag != part.eTag) {
-                throw IOException("mismatching checksum: ${response.eTag} != ${part.eTag}")
+        parts.add(
+            scope.async(CoroutineName("part-${part.partNumber}")) {
+                val response = s3.uploadPart(
+                    UploadPartRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .partNumber(part.partNumber)
+                        .uploadId(uploadID)
+                        .contentMD5(part.contentMD5)
+                        .contentLength(part.buffer.size.toLong())
+                        .build(),
+                    AsyncRequestBody.fromBytes(part.buffer)
+                ).await()
+                if (response.eTag != part.eTag) {
+                    throw IOException("mismatching checksum: ${response.eTag} != ${part.eTag}")
+                }
+                semaphore.release()
+                part.toCompletedPart()
             }
-            semaphore.release()
-            part.toCompletedPart()
-        })
+        )
         buffer.reset()
     }
 
