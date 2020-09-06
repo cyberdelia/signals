@@ -1,13 +1,12 @@
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.72"
+    kotlin("jvm") version "1.4.0"
     `java-library`
     `maven-publish`
 
-    id("org.jmailen.kotlinter") version "2.4.1"
-    id("org.jetbrains.dokka") version "0.10.1"
+    id("org.jmailen.kotlinter") version "3.0.2"
+    id("org.jetbrains.dokka") version "1.4.0"
 }
 
 group = "com.lapanthere"
@@ -17,13 +16,13 @@ repositories {
 }
 
 dependencies {
-    val kotlinVersion = "1.3.72"
+    val kotlinVersion = "1.4.0"
     implementation(kotlin("stdlib-jdk8", kotlinVersion))
 
     implementation(kotlin("test", kotlinVersion))
     implementation(kotlin("test-junit", kotlinVersion))
 
-    val coroutineVersion = "1.3.8"
+    val coroutineVersion = "1.3.9"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutineVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineVersion")
@@ -40,16 +39,12 @@ tasks.register<Jar>("sourcesJar") {
     from(sourceSets.main.get().allSource)
 }
 
-tasks.named<KotlinCompile>("compileKotlin") {
-    kotlinOptions.freeCompilerArgs = listOf("-Xexplicit-api=strict")
-}
-
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
 }
 
-tasks.withType<DokkaTask> {
-    outputFormat = "gfm"
+kotlin {
+    explicitApi()
 }
 
 kotlinter {

@@ -56,19 +56,21 @@ public class S3InputStream(
             ).await().asInputStream()
         }
     }.toMutableList()
-    private val buffer = SequenceInputStream(object : Enumeration<InputStream> {
-        private val iterator = streams.iterator()
+    private val buffer = SequenceInputStream(
+        object : Enumeration<InputStream> {
+            private val iterator = streams.iterator()
 
-        override fun hasMoreElements(): Boolean {
-            // Starts downloading the next chunks ahead.
-            streams.take(parallelism).forEach { it.start() }
-            return iterator.hasNext()
-        }
+            override fun hasMoreElements(): Boolean {
+                // Starts downloading the next chunks ahead.
+                streams.take(parallelism).forEach { it.start() }
+                return iterator.hasNext()
+            }
 
-        override fun nextElement(): InputStream = runBlocking {
-            iterator.use { it.await() }
+            override fun nextElement(): InputStream = runBlocking {
+                iterator.use { it.await() }
+            }
         }
-    })
+    )
 
     override fun read(): Int {
         return buffer.read()
