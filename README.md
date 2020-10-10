@@ -9,6 +9,13 @@ Signals provides parallel and streaming upload and download of S3 objects.
 - *Retries*: Every call to s3 are retried according to Amazon S3 recommendations.
 - *Memory conscious*: Signals tries to make a conscious usage of memory during upload and download.
 
+## Installation 
+
+The package is available on JCenter, using Gradle:
+
+```
+implementation("com.lapanthere:signals:0.3.0")
+```
 
 ## Usage
 
