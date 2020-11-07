@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
-class S3InputStreamTest {
+internal class S3InputStreamTest {
     private val bucket = "bucket"
     private val key = "key"
     private val s3: S3AsyncClient = mockk {
@@ -30,6 +30,8 @@ class S3InputStreamTest {
         } returns CompletableFuture.completedFuture(
             HeadObjectResponse.builder()
                 .contentLength(6_291_456)
+                .contentEncoding("application/json")
+                .eTag("d41d8cd98f00b204e9800998ecf8427e-2")
                 .build()
         )
         every {
@@ -59,7 +61,7 @@ class S3InputStreamTest {
     }
 
     @Test
-    fun testDownload() {
+    fun `download a file`() {
         ByteArrayOutputStream().use { target ->
             S3InputStream(bucket = bucket, key = key, s3 = s3).use { stream ->
                 stream.copyTo(target)
@@ -96,7 +98,23 @@ class S3InputStreamTest {
     }
 
     @Test
-    fun testFailure() {
+    fun `downloading starts when reading starts`() {
+        S3InputStream(bucket = bucket, key = key, s3 = s3)
+        verify(exactly = 1) {
+            s3.headObject(
+                HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build()
+            )
+        }
+        verify(exactly = 0) {
+            s3.getObject(any<GetObjectRequest>(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>())
+        }
+    }
+
+    @Test
+    fun `handle exception on failure`() {
         every {
             s3.getObject(
                 GetObjectRequest.builder()

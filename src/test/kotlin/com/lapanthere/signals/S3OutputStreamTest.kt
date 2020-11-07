@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
-class S3OutputStreamTest {
+internal class S3OutputStreamTest {
     private val uploadID = "upload-id"
     private val bucket = "bucket"
     private val key = "key"
@@ -96,7 +96,7 @@ class S3OutputStreamTest {
     }
 
     @Test
-    fun testUpload() {
+    fun `uploads a file`() {
         ByteArrayInputStream(ByteArray(32)).use { target ->
             S3OutputStream(bucket = bucket, key = key, s3 = s3).use { stream ->
                 target.copyTo(stream)
@@ -154,7 +154,7 @@ class S3OutputStreamTest {
     }
 
     @Test
-    fun testFailure() {
+    fun `handle exception on failure`() {
         every {
             s3.uploadPart(
                 UploadPartRequest.builder()

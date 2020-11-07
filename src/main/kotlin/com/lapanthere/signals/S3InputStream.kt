@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import java.io.InputStream
 import java.io.SequenceInputStream
+import java.time.Instant
 import java.util.Enumeration
 
 internal val AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors()
@@ -35,14 +36,13 @@ public class S3InputStream(
     mutator: (GetObjectRequest.Builder) -> Unit = {}
 ) : InputStream() {
     private val scope = CoroutineScope(Dispatchers.IO)
-    private val parts = byteRange(
-        s3.headObject(
-            HeadObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build()
-        ).get().contentLength()
-    )
+    private val s3Object = s3.headObject(
+        HeadObjectRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .build()
+    ).get()
+    private val parts = byteRange(s3Object.contentLength())
     private val streams = parts.mapIndexed { i, (begin, end) ->
         scope.async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
             s3.getObject(
@@ -56,25 +56,37 @@ public class S3InputStream(
             ).await().asInputStream()
         }
     }.toMutableList()
-    private val buffer = SequenceInputStream(
-        object : Enumeration<InputStream> {
-            private val iterator = streams.iterator()
+    private val buffer: SequenceInputStream by lazy {
+        SequenceInputStream(
+            object : Enumeration<InputStream> {
+                private val iterator = streams.iterator()
 
-            override fun hasMoreElements(): Boolean {
-                // Starts downloading the next chunks ahead.
-                streams.take(parallelism).forEach { it.start() }
-                return iterator.hasNext()
+                override fun hasMoreElements(): Boolean {
+                    // Starts downloading the next chunks ahead.
+                    streams.take(parallelism).forEach { it.start() }
+                    return iterator.hasNext()
+                }
+
+                override fun nextElement(): InputStream = runBlocking {
+                    iterator.use { it.await() }
+                }
             }
-
-            override fun nextElement(): InputStream = runBlocking {
-                iterator.use { it.await() }
-            }
-        }
-    )
-
-    override fun read(): Int {
-        return buffer.read()
+        )
     }
+
+    public val eTag: String? = s3Object.eTag()
+    public val contentLength: Long? = s3Object.contentLength()
+    public val lastModified: Instant? = s3Object.lastModified()
+    public val metadata: Map<String, String> = s3Object.metadata()
+    public val contentType: String? = s3Object.contentType()
+    public val contentEncoding: String? = s3Object.contentEncoding()
+    public val contentDisposition: String? = s3Object.contentDisposition()
+    public val contentLanguage: String? = s3Object.contentLanguage()
+    public val versionId: String? = s3Object.versionId()
+    public val cacheControl: String? = s3Object.cacheControl()
+    public val expires: Instant? = s3Object.expires()
+
+    override fun read(): Int = buffer.read()
 
     override fun close() {
         buffer.close()
