@@ -33,7 +33,8 @@ import java.util.Base64
  * @param bucket The name of the bucket to which to initiate the upload.
  * @param key Object key for which the multipart upload is to be initiated.
  * @param parallelism The number of parts to upload at a time.
- * @param s3 The S3 client to be used during the upload.
+ * @param s3 A [software.amazon.awssdk.services.s3.S3AsyncClient] to be used during the upload.
+ * @param chunker A [Chunker] that provides each chunk sizes.
  * @param mutator The function that mutates the request given to the S3 client.
  *
  */
@@ -42,6 +43,7 @@ public class S3OutputStream(
     private val key: String,
     parallelism: Int = AVAILABLE_PROCESSORS,
     private val s3: S3AsyncClient = S3AsyncClient.create(),
+    chunker: Chunker = DefaultChunker(),
     mutator: (CreateMultipartUploadRequest.Builder) -> Unit = {}
 ) : OutputStream() {
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -49,7 +51,7 @@ public class S3OutputStream(
     private val parts = mutableListOf<Deferred<CompletedPart>>()
     private val buffer = ByteArrayOutputStream(MIN_PART_SIZE.toInt())
     private val digest = DigestOutputStream(buffer, MessageDigest.getInstance("MD5"))
-    private val partSize = SizeIterator()
+    private val partSize = SizeIterator(chunker)
     private val uploadID by lazy {
         s3.createMultipartUpload(
             CreateMultipartUploadRequest.builder()

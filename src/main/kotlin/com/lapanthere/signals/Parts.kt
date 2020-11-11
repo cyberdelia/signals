@@ -7,33 +7,38 @@ import java.io.ByteArrayOutputStream
 import java.security.DigestOutputStream
 import kotlin.math.min
 
-internal const val MIN_PART_SIZE: Long = 5_242_880L
-private const val MAX_PART_SIZE: Long = 5_368_709_120L
+public const val MIN_PART_SIZE: Long = 5_242_880L
+public const val MAX_PART_SIZE: Long = 5_368_709_120L
 private const val GROWTH_FACTOR: Long = 1530L
 
-private val chunkSize
-    get() = sequence {
+/**
+ * DefaultChunker provides a [Chunker] that provides sane
+ * defaults for small to medium file sizes.
+ */
+public class DefaultChunker : Chunker {
+    override fun iterator(): Iterator<Long> = sequence {
         var chunkSize = MIN_PART_SIZE
         while (true) {
             yield(chunkSize)
             chunkSize = min(chunkSize + chunkSize / GROWTH_FACTOR, MAX_PART_SIZE)
         }
-    }
+    }.iterator()
+}
 
-internal class SizeIterator {
-    private val iterator = chunkSize.iterator()
-    private var size = iterator.next()
+internal class SizeIterator(chunker: Chunker) {
+    private val iterator = chunker.iterator()
+    private var chunkSize = iterator.next()
 
     val value: Long
-        get() = size
+        get() = chunkSize
 
     fun next() {
-        size = iterator.next()
+        chunkSize = iterator.next()
     }
 }
 
-internal fun byteRange(size: Long) = sequence {
-    val iterator = chunkSize.iterator()
+internal fun byteRange(chunker: Chunker, size: Long) = sequence {
+    val iterator = chunker.iterator()
     var begin = 0L
     while (begin < size) {
         val chunkSize = iterator.next()
@@ -51,7 +56,12 @@ internal data class Part(
     val eTag: String = digest.toHex()
     val contentMD5: String = digest.encodeToString()
 
-    constructor(uploadID: String, partNumber: Int, digest: DigestOutputStream, buffer: ByteArrayOutputStream) : this(
+    constructor(
+        uploadID: String,
+        partNumber: Int,
+        digest: DigestOutputStream,
+        buffer: ByteArrayOutputStream
+    ) : this(
         uploadID,
         partNumber,
         digest.digest,
