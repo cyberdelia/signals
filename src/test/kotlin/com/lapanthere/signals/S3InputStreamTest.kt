@@ -1,5 +1,6 @@
 package com.lapanthere.signals
 
+import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -105,6 +106,8 @@ internal class S3InputStreamTest {
                 any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
         }
+
+        confirmVerified(s3)
     }
 
     @Test
@@ -145,6 +148,7 @@ internal class S3InputStreamTest {
         verify(exactly = 0) {
             s3.getObject(any<GetObjectRequest>(), any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>())
         }
+        confirmVerified(s3)
     }
 
     @Test

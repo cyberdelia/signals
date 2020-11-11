@@ -50,13 +50,15 @@ public class S3OutputStream(
     private val buffer = ByteArrayOutputStream(MIN_PART_SIZE.toInt())
     private val digest = DigestOutputStream(buffer, MessageDigest.getInstance("MD5"))
     private val partSize = SizeIterator()
-    private val uploadID = s3.createMultipartUpload(
-        CreateMultipartUploadRequest.builder()
-            .applyMutation(mutator)
-            .bucket(bucket)
-            .key(key)
-            .build()
-    ).get().uploadId()
+    private val uploadID by lazy {
+        s3.createMultipartUpload(
+            CreateMultipartUploadRequest.builder()
+                .applyMutation(mutator)
+                .bucket(bucket)
+                .key(key)
+                .build()
+        ).get().uploadId()
+    }
 
     override fun write(b: Int) {
         digest.write(b)

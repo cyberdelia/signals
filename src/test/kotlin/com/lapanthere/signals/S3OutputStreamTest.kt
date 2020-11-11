@@ -209,4 +209,14 @@ internal class S3OutputStreamTest {
 
         confirmVerified(s3)
     }
+
+    @Test
+    fun `not uploading before being written to`() {
+        S3OutputStream(bucket = bucket, key = key, s3 = s3)
+        verify(exactly = 0) {
+            s3.createMultipartUpload(any<CreateMultipartUploadRequest>())
+            s3.uploadPart(any<UploadPartRequest>(), any<AsyncRequestBody>())
+        }
+        confirmVerified(s3)
+    }
 }
