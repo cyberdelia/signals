@@ -12,13 +12,16 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse
 import java.io.ByteArrayOutputStream
+import java.time.Instant
 import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 internal class S3InputStreamTest {
     private val bucket = "bucket"
     private val key = "key"
+    private val date = Instant.now()
     private val s3: S3AsyncClient = mockk {
         every {
             headObject(
@@ -30,7 +33,14 @@ internal class S3InputStreamTest {
         } returns CompletableFuture.completedFuture(
             HeadObjectResponse.builder()
                 .contentLength(6_291_456)
-                .contentEncoding("application/json")
+                .contentType("application/json")
+                .contentEncoding("gzip")
+                .contentDisposition("inline")
+                .cacheControl("no-cache")
+                .expires(date)
+                .lastModified(date)
+                .contentLanguage("de-DE")
+                .versionId("L4kqtJlcpXroDTDmpUMLUo")
                 .eTag("d41d8cd98f00b204e9800998ecf8427e-2")
                 .build()
         )
@@ -95,6 +105,30 @@ internal class S3InputStreamTest {
                 any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
             )
         }
+    }
+
+    @Test
+    fun `provides metadata`() {
+        val stream = S3InputStream(bucket = bucket, key = key, s3 = s3)
+        verify(exactly = 1) {
+            s3.headObject(
+                HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build()
+            )
+        }
+        assertEquals("application/json", stream.contentType)
+        assertEquals("gzip", stream.contentEncoding)
+        assertEquals("inline", stream.contentDisposition)
+        assertEquals("de-DE", stream.contentLanguage)
+        assertEquals(6_291_456, stream.contentLength)
+        assertEquals(date, stream.lastModified)
+        assertEquals(date, stream.expires)
+        assertEquals("L4kqtJlcpXroDTDmpUMLUo", stream.versionId)
+        assertEquals("d41d8cd98f00b204e9800998ecf8427e-2", stream.eTag)
+        assertEquals("no-cache", stream.cacheControl)
+        assertEquals(emptyMap(), stream.metadata)
     }
 
     @Test
