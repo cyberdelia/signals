@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.10"
+    kotlin("jvm") version "1.4.20"
     `java-library`
     `maven-publish`
 
@@ -20,16 +20,15 @@ dependencies {
     implementation(kotlin("test"))
     implementation(kotlin("test-junit"))
 
-    val coroutineVersion = "1.4.1"
+    val coroutineVersion = "1.4.2"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutineVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineVersion")
 
     val awsVersion = "[2.15,)"
     implementation("software.amazon.awssdk:s3:$awsVersion")
-    testImplementation("software.amazon.awssdk:sts:$awsVersion")
 
-    testImplementation("io.mockk:mockk:[1.10.0,)")
+    testImplementation("io.mockk:mockk:1.10.2")
 }
 
 tasks.register<Jar>("sourcesJar") {
