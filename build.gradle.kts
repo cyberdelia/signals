@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.21"
+    kotlin("jvm") version "1.4.30"
     `java-library`
     `maven-publish`
 
@@ -12,7 +12,7 @@ plugins {
 group = "com.lapanthere"
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 dependencies {
@@ -25,8 +25,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutineVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineVersion")
 
-    val awsVersion = "[2.15,)"
-    implementation("software.amazon.awssdk:s3:$awsVersion")
+    implementation("software.amazon.awssdk:s3:2.16.3")
 
     testImplementation("io.mockk:mockk:1.10.2")
 }
@@ -56,15 +55,6 @@ publishing {
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
-            }
-        }
-
-        maven {
-            name = "Bintray"
-            url = uri("https://api.bintray.com/maven/cyberdelia/lapanthere/signals/;publish=1")
-            credentials {
-                username = System.getenv("BINTRAY_USERNAME")
-                password = System.getenv("BINTRAY_TOKEN")
             }
         }
     }
