@@ -20,7 +20,7 @@ dependencies {
     implementation(kotlin("test"))
     implementation(kotlin("test-junit"))
 
-    val coroutineVersion = "1.4.2"
+    val coroutineVersion = "1.4.3"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutineVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineVersion")
