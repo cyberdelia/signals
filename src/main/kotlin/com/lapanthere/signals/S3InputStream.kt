@@ -1,5 +1,6 @@
 package com.lapanthere.signals
 
+import com.lapanthere.signals.transformers.InputStreamAsyncResponseTransformer
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -7,7 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runBlocking
-import software.amazon.awssdk.core.async.AsyncResponseTransformer
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest
@@ -15,6 +15,7 @@ import java.io.InputStream
 import java.io.SequenceInputStream
 import java.time.Instant
 import java.util.Enumeration
+import kotlin.coroutines.CoroutineContext
 
 internal val AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors()
 
@@ -36,8 +37,7 @@ public class S3InputStream(
     s3: S3AsyncClient = S3AsyncClient.create(),
     chunker: Chunker = DefaultChunker(),
     mutator: (GetObjectRequest.Builder) -> Unit = {}
-) : InputStream() {
-    private val scope = CoroutineScope(Dispatchers.IO)
+) : InputStream(), CoroutineScope {
     private val s3Object = s3.headObject(
         HeadObjectRequest.builder()
             .bucket(bucket)
@@ -46,7 +46,7 @@ public class S3InputStream(
     ).get()
     private val parts = byteRange(chunker, s3Object.contentLength())
     private val streams = parts.mapIndexed { i, (begin, end) ->
-        scope.async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
+        async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
             s3.getObject(
                 GetObjectRequest.builder()
                     .applyMutation(mutator)
@@ -54,8 +54,8 @@ public class S3InputStream(
                     .key(key)
                     .range("bytes=$begin-$end")
                     .build(),
-                AsyncResponseTransformer.toBytes()
-            ).await().asInputStream()
+                InputStreamAsyncResponseTransformer()
+            ).await()
         }
     }.toMutableList()
     private val buffer: SequenceInputStream by lazy {
@@ -93,6 +93,9 @@ public class S3InputStream(
     override fun close() {
         buffer.close()
     }
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO
 }
 
 internal inline fun <T, R> MutableIterator<T>.use(block: (T) -> R): R {

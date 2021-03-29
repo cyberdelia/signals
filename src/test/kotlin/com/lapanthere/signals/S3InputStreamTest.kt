@@ -1,10 +1,10 @@
 package com.lapanthere.signals
 
+import com.lapanthere.signals.transformers.InputStreamAsyncResponseTransformer
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import software.amazon.awssdk.core.ResponseBytes
 import software.amazon.awssdk.core.exception.SdkClientException
 import software.amazon.awssdk.core.internal.async.ByteArrayAsyncResponseTransformer
 import software.amazon.awssdk.services.s3.S3AsyncClient
@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.GetObjectResponse
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
@@ -52,10 +53,10 @@ internal class S3InputStreamTest {
                     .key(key)
                     .range("bytes=0-5242879")
                     .build(),
-                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                any<InputStreamAsyncResponseTransformer>()
             )
         } returns CompletableFuture.completedFuture(
-            ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), ByteArray(32))
+            ByteArrayInputStream(ByteArray(32))
         )
         every {
             getObject(
@@ -64,10 +65,10 @@ internal class S3InputStreamTest {
                     .key(key)
                     .range("bytes=5242880-10489185")
                     .build(),
-                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                any<InputStreamAsyncResponseTransformer>()
             )
         } returns CompletableFuture.completedFuture(
-            ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), ByteArray(32))
+            ByteArrayInputStream(ByteArray(32))
         )
     }
 
