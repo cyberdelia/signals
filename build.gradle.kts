@@ -25,7 +25,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutineVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineVersion")
 
-    implementation("software.amazon.awssdk:s3:2.16.29")
+    implementation("software.amazon.awssdk:s3:2.16.34")
 
     testImplementation("io.mockk:mockk:1.11.0")
 }
