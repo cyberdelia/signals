@@ -1,21 +1,23 @@
 package com.lapanthere.signals
 
 import com.lapanthere.signals.transformers.InputStreamAsyncResponseTransformer
-import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.runBlocking
 import software.amazon.awssdk.services.s3.S3AsyncClient
 import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest
+import java.io.IOException
 import java.io.InputStream
-import java.io.SequenceInputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.time.Instant
-import java.util.Enumeration
-import kotlin.coroutines.CoroutineContext
 
 internal val AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors()
 
@@ -37,17 +39,19 @@ public class S3InputStream(
     s3: S3AsyncClient = S3AsyncClient.create(),
     chunker: Chunker = DefaultChunker(),
     mutator: (GetObjectRequest.Builder) -> Unit = {}
-) : InputStream(), CoroutineScope {
+) : InputStream() {
     private val s3Object = s3.headObject(
         HeadObjectRequest.builder()
             .bucket(bucket)
             .key(key)
             .build()
     ).get()
+    private val scope = CoroutineScope(Dispatchers.IO)
     private val parts = byteRange(chunker, s3Object.contentLength())
-    private val streams = parts.mapIndexed { i, (begin, end) ->
-        async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
-            s3.getObject(
+    private val pipe = PipedInputStream()
+    private val pipeline = flow {
+        parts.forEach { (begin, end) ->
+            val inputStream = s3.getObject(
                 GetObjectRequest.builder()
                     .applyMutation(mutator)
                     .bucket(bucket)
@@ -56,24 +60,19 @@ public class S3InputStream(
                     .build(),
                 InputStreamAsyncResponseTransformer()
             ).await()
+            emit(inputStream)
         }
-    }.toMutableList()
-    private val buffer: SequenceInputStream by lazy {
-        SequenceInputStream(
-            object : Enumeration<InputStream> {
-                private val iterator = streams.iterator()
+    }
 
-                override fun hasMoreElements(): Boolean {
-                    // Starts downloading the next chunks ahead.
-                    streams.take(parallelism).forEach { it.start() }
-                    return iterator.hasNext()
-                }
+    private var cancellationException: Throwable? = null
 
-                override fun nextElement(): InputStream = runBlocking {
-                    iterator.use { it.await() }
-                }
-            }
-        )
+    init {
+        val outputStream = PipedOutputStream(pipe)
+        pipeline.buffer(parallelism)
+            .onEach { it.copyTo(outputStream) }
+            .catch { cancellationException = it }
+            .onCompletion { outputStream.close() }
+            .launchIn(scope)
     }
 
     public val eTag: String? = s3Object.eTag()
@@ -88,14 +87,31 @@ public class S3InputStream(
     public val cacheControl: String? = s3Object.cacheControl()
     public val expires: Instant? = s3Object.expires()
 
-    override fun read(): Int = buffer.read()
-
-    override fun close() {
-        buffer.close()
+    override fun read(): Int = run {
+        pipe.read()
     }
 
-    override val coroutineContext: CoroutineContext
-        get() = Dispatchers.IO
+    override fun read(b: ByteArray, off: Int, len: Int): Int = run {
+        pipe.read(b, off, len)
+    }
+
+    override fun close(): Unit = finally {
+        pipe.close()
+    }
+
+    private inline fun finally(block: () -> Unit) {
+        block()
+        if (cancellationException != null) {
+            throw IOException(cancellationException)
+        }
+    }
+
+    private inline fun <T> run(block: () -> T): T {
+        if (cancellationException != null) {
+            throw IOException(cancellationException)
+        }
+        return block()
+    }
 }
 
 internal inline fun <T, R> MutableIterator<T>.use(block: (T) -> R): R {

@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
 import kotlin.test.Test
@@ -165,7 +166,7 @@ internal class S3InputStreamTest {
             )
         } throws SdkClientException.create("read timeout")
 
-        assertFailsWith<SdkClientException> {
+        assertFailsWith<IOException> {
             ByteArrayOutputStream().use { target ->
                 S3InputStream(bucket = bucket, key = key, s3 = s3).use { stream ->
                     stream.copyTo(target)
