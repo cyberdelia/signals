@@ -17,8 +17,8 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation(kotlin("test"))
-    implementation(kotlin("test-junit"))
+    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test-junit"))
 
     val coroutineVersion = "1.4.3"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
@@ -29,6 +29,7 @@ dependencies {
     implementation("software.amazon.awssdk:s3:2.16.39")
 
     testImplementation("io.mockk:mockk:1.11.0")
+    testImplementation("software.amazon.awssdk:sts:2.16.39")
 }
 
 tasks.register<Jar>("sourcesJar") {
