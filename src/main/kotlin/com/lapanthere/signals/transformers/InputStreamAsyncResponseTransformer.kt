@@ -2,7 +2,6 @@ package com.lapanthere.signals.transformers
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onCompletion
@@ -19,14 +18,12 @@ import java.nio.ByteBuffer
 import java.util.Arrays
 import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.cancellation.CancellationException
 
 public class InputStreamAsyncResponseTransformer(
     override val coroutineContext: CoroutineContext = Dispatchers.IO
 ) : AsyncResponseTransformer<GetObjectResponse, InputStream>, CoroutineScope {
     private val future = CompletableFuture<InputStream>()
     private val pipe = PipedOutputStream()
-    private lateinit var pipeline: Job
 
     override fun prepare(): CompletableFuture<InputStream> = future
 
@@ -34,7 +31,7 @@ public class InputStreamAsyncResponseTransformer(
 
     override fun onStream(publisher: SdkPublisher<ByteBuffer>) {
         val inputStream = CancellablePipedInputStream(pipe)
-        pipeline = publisher.asFlow()
+        publisher.asFlow()
             .onEach { pipe.write(it.toByteArray()) }
             .catch { inputStream.cancel(it) }
             .onCompletion {
@@ -47,20 +44,17 @@ public class InputStreamAsyncResponseTransformer(
 
     override fun exceptionOccurred(error: Throwable) {
         future.completeExceptionally(error)
-        if (::pipeline.isInitialized) {
-            pipeline.cancel(CancellationException(cause = error))
-        }
     }
 }
 
-internal class CancellablePipedInputStream(
+private class CancellablePipedInputStream(
     private val inputStream: PipedInputStream
 ) : InputStream() {
     constructor(pipedOutputStream: PipedOutputStream) : this(PipedInputStream(pipedOutputStream))
 
     private var cancellationException: Throwable? = null
 
-    internal fun cancel(throwable: Throwable) {
+    fun cancel(throwable: Throwable) {
         cancellationException = throwable
     }
 
