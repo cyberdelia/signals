@@ -34,10 +34,7 @@ public class InputStreamAsyncResponseTransformer(
         publisher.asFlow()
             .onEach { pipe.write(it.toByteArray()) }
             .catch { inputStream.cancel(it) }
-            .onCompletion {
-                pipe.flush()
-                pipe.close()
-            }
+            .onCompletion { pipe.close() }
             .launchIn(this)
         future.complete(inputStream)
     }
@@ -48,12 +45,12 @@ public class InputStreamAsyncResponseTransformer(
 }
 
 private class CancellablePipedInputStream(
-    private val inputStream: PipedInputStream
-) : InputStream() {
-    constructor(pipedOutputStream: PipedOutputStream) : this(PipedInputStream(pipedOutputStream))
-
+    source: PipedOutputStream
+) : PipedInputStream(source) {
+    @Volatile
     private var cancellationException: Throwable? = null
 
+    @Synchronized
     fun cancel(throwable: Throwable) {
         cancellationException = throwable
     }
@@ -73,27 +70,27 @@ private class CancellablePipedInputStream(
     }
 
     override fun available(): Int = run {
-        inputStream.available()
+        super.available()
     }
 
     override fun read(b: ByteArray): Int = run {
-        inputStream.read(b)
+        super.read(b)
     }
 
     override fun read(b: ByteArray, off: Int, len: Int): Int = run {
-        inputStream.read(b, off, len)
+        super.read(b, off, len)
     }
 
     override fun read(): Int = run {
-        inputStream.read()
+        super.read()
     }
 
     override fun skip(n: Long): Long = run {
-        inputStream.skip(n)
+        super.skip(n)
     }
 
     override fun close() = finally {
-        inputStream.close()
+        super.close()
     }
 }
 
