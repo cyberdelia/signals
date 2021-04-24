@@ -30,7 +30,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutineVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineVersion")
 
-    implementation("software.amazon.awssdk:s3:2.16.43")
+    implementation("software.amazon.awssdk:s3:2.16.47")
 
     testImplementation("io.mockk:mockk:1.11.0")
     testImplementation("software.amazon.awssdk:sts:2.16.43")
