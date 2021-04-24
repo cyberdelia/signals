@@ -24,16 +24,17 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit"))
 
-    val coroutineVersion = "1.4.3"
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutineVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutineVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutineVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineVersion")
+    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.4.3"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 
-    implementation("software.amazon.awssdk:s3:2.16.47")
+    implementation(platform("software.amazon.awssdk:bom:2.16.47"))
+    implementation("software.amazon.awssdk:s3")
+    testImplementation("software.amazon.awssdk:sts")
 
     testImplementation("io.mockk:mockk:1.11.0")
-    testImplementation("software.amazon.awssdk:sts:2.16.47")
 }
 
 tasks.register<Jar>("sourcesJar") {
