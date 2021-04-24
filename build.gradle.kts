@@ -24,7 +24,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit"))
 
-    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.4.3"))
+    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.4.3-native-mt"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")
