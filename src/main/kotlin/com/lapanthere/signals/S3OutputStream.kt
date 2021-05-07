@@ -168,4 +168,4 @@ internal val List<CompletedPart>.eTag: String
     }
 
 internal val CompletedPart.digest: ByteArray
-    get() = this.eTag().chunked(2).map { it.toUpperCase().toInt(16).toByte() }.toByteArray()
+    get() = this.eTag().chunked(2).map { it.uppercase().toInt(16).toByte() }.toByteArray()

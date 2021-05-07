@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.32"
+    kotlin("jvm") version "1.5.0"
     `java-library`
     `maven-publish`
 
@@ -15,14 +15,8 @@ repositories {
     mavenCentral()
 }
 
-dependencyLocking {
-    lockAllConfigurations()
-}
-
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
     testImplementation(kotlin("test"))
-    testImplementation(kotlin("test-junit"))
 
     implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.4.3"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
