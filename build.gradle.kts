@@ -6,7 +6,7 @@ plugins {
     `maven-publish`
 
     id("org.jmailen.kotlinter") version "3.4.5"
-    id("org.jetbrains.dokka") version "1.4.32"
+    id("org.jetbrains.dokka") version "1.5.0"
 }
 
 group = "com.lapanthere"
