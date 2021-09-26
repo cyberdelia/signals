@@ -11,7 +11,7 @@ Signals provides parallel and streaming upload and download of S3 objects.
 
 ## Installation 
 
-The package is available on JCenter, using Gradle:
+The package is available in Github, using Gradle:
 
 ```
 implementation("com.lapanthere:signals:0.4.0")
