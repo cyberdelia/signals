@@ -28,7 +28,7 @@ dependencies {
     implementation("software.amazon.awssdk:s3")
     testImplementation("software.amazon.awssdk:sts")
 
-    testImplementation("io.mockk:mockk:1.12.2")
+    testImplementation("io.mockk:mockk:1.12.3")
 }
 
 tasks.register<Jar>("sourcesJar") {
