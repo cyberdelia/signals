@@ -18,7 +18,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
 
-    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.0"))
+    implementation(platform("org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.1"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")
