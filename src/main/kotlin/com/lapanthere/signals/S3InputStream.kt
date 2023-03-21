@@ -36,13 +36,13 @@ public class S3InputStream(
     parallelism: Int = AVAILABLE_PROCESSORS,
     s3: S3AsyncClient = S3AsyncClient.create(),
     chunker: Chunker = DefaultChunker(),
-    mutator: (GetObjectRequest.Builder) -> Unit = {}
+    mutator: (GetObjectRequest.Builder) -> Unit = {},
 ) : InputStream(), CoroutineScope {
     private val s3Object = s3.headObject(
         HeadObjectRequest.builder()
             .bucket(bucket)
             .key(key)
-            .build()
+            .build(),
     ).get()
     private val parts = byteRange(chunker, s3Object.contentLength())
     private val streams = parts.mapIndexed { i, (begin, end) ->
@@ -54,7 +54,7 @@ public class S3InputStream(
                     .key(key)
                     .range("bytes=$begin-$end")
                     .build(),
-                InputStreamAsyncResponseTransformer()
+                InputStreamAsyncResponseTransformer(),
             ).await()
         }
     }.toMutableList()
@@ -72,7 +72,7 @@ public class S3InputStream(
                 override fun nextElement(): InputStream = runBlocking {
                     iterator.use { it.await() }
                 }
-            }
+            },
         )
     }
 

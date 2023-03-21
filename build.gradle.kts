@@ -44,10 +44,6 @@ kotlin {
     explicitApi()
 }
 
-kotlinter {
-    disabledRules = arrayOf("import-ordering")
-}
-
 publishing {
     repositories {
         maven {

@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.CoroutineContext
 
 public class InputStreamAsyncResponseTransformer(
-    override val coroutineContext: CoroutineContext = Dispatchers.IO
+    override val coroutineContext: CoroutineContext = Dispatchers.IO,
 ) : AsyncResponseTransformer<GetObjectResponse, InputStream>, CoroutineScope {
     private val future = CompletableFuture<InputStream>()
     private val pipe = PipedOutputStream()
@@ -45,7 +45,7 @@ public class InputStreamAsyncResponseTransformer(
 }
 
 private class CancellablePipedInputStream(
-    source: PipedOutputStream
+    source: PipedOutputStream,
 ) : PipedInputStream(source) {
     @Volatile
     private var cancellationException: Throwable? = null
@@ -99,7 +99,7 @@ internal fun ByteBuffer.toByteArray(): ByteArray {
         return Arrays.copyOfRange(
             array(),
             arrayOffset() + position(),
-            arrayOffset() + limit()
+            arrayOffset() + limit(),
         )
     }
 

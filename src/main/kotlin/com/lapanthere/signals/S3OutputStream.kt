@@ -44,7 +44,7 @@ public class S3OutputStream(
     parallelism: Int = AVAILABLE_PROCESSORS,
     private val s3: S3AsyncClient = S3AsyncClient.create(),
     chunker: Chunker = DefaultChunker(),
-    mutator: (CreateMultipartUploadRequest.Builder) -> Unit = {}
+    mutator: (CreateMultipartUploadRequest.Builder) -> Unit = {},
 ) : OutputStream() {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val semaphore = Semaphore(parallelism)
@@ -58,7 +58,7 @@ public class S3OutputStream(
                 .applyMutation(mutator)
                 .bucket(bucket)
                 .key(key)
-                .build()
+                .build(),
         ).get().uploadId()
     }
 
@@ -84,14 +84,14 @@ public class S3OutputStream(
                         .contentMD5(part.contentMD5)
                         .contentLength(part.buffer.size.toLong())
                         .build(),
-                    AsyncRequestBody.fromBytes(part.buffer)
+                    AsyncRequestBody.fromBytes(part.buffer),
                 ).await()
                 if (response.eTag != part.eTag) {
                     throw IOException("mismatching checksum: ${response.eTag} != ${part.eTag}")
                 }
                 semaphore.release()
                 part.toCompletedPart()
-            }
+            },
         )
         buffer.reset()
     }
@@ -113,9 +113,9 @@ public class S3OutputStream(
                     .multipartUpload(
                         CompletedMultipartUpload.builder()
                             .parts(parts)
-                            .build()
+                            .build(),
                     )
-                    .build()
+                    .build(),
             ).await()
             if (response.eTag != parts.eTag) {
                 throw IOException("mismatching checksum: ${response.eTag} != ${parts.eTag}")
@@ -135,7 +135,7 @@ public class S3OutputStream(
                 .bucket(bucket)
                 .key(key)
                 .uploadId(uploadID)
-                .build()
+                .build(),
         ).await()
     }
 }

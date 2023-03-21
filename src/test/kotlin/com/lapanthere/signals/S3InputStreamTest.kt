@@ -30,7 +30,7 @@ internal class S3InputStreamTest {
                 HeadObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .build()
+                    .build(),
             )
         } returns CompletableFuture.completedFuture(
             HeadObjectResponse.builder()
@@ -44,7 +44,7 @@ internal class S3InputStreamTest {
                 .contentLanguage("de-DE")
                 .versionId("L4kqtJlcpXroDTDmpUMLUo")
                 .eTag("d41d8cd98f00b204e9800998ecf8427e-2")
-                .build()
+                .build(),
         )
         every {
             getObject(
@@ -53,10 +53,10 @@ internal class S3InputStreamTest {
                     .key(key)
                     .range("bytes=0-5242879")
                     .build(),
-                any<InputStreamAsyncResponseTransformer>()
+                any<InputStreamAsyncResponseTransformer>(),
             )
         } returns CompletableFuture.completedFuture(
-            ByteArrayInputStream(ByteArray(32))
+            ByteArrayInputStream(ByteArray(32)),
         )
         every {
             getObject(
@@ -65,10 +65,10 @@ internal class S3InputStreamTest {
                     .key(key)
                     .range("bytes=5242880-10489185")
                     .build(),
-                any<InputStreamAsyncResponseTransformer>()
+                any<InputStreamAsyncResponseTransformer>(),
             )
         } returns CompletableFuture.completedFuture(
-            ByteArrayInputStream(ByteArray(32))
+            ByteArrayInputStream(ByteArray(32)),
         )
     }
 
@@ -84,7 +84,7 @@ internal class S3InputStreamTest {
                 HeadObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .build()
+                    .build(),
             )
         }
         verify(exactly = 1) {
@@ -94,7 +94,7 @@ internal class S3InputStreamTest {
                     .key(key)
                     .range("bytes=0-5242879")
                     .build(),
-                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>(),
             )
         }
         verify(exactly = 1) {
@@ -104,7 +104,7 @@ internal class S3InputStreamTest {
                     .key(key)
                     .range("bytes=5242880-10489185")
                     .build(),
-                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>(),
             )
         }
 
@@ -119,7 +119,7 @@ internal class S3InputStreamTest {
                 HeadObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .build()
+                    .build(),
             )
         }
         assertEquals("application/json", stream.contentType)
@@ -143,7 +143,7 @@ internal class S3InputStreamTest {
                 HeadObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .build()
+                    .build(),
             )
         }
         verify(exactly = 0) {
@@ -161,7 +161,7 @@ internal class S3InputStreamTest {
                     .key(key)
                     .range("bytes=0-5242879")
                     .build(),
-                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>()
+                any<ByteArrayAsyncResponseTransformer<GetObjectResponse>>(),
             )
         } throws SdkClientException.create("read timeout")
 
