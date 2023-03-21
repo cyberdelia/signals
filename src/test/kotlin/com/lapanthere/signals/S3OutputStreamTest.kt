@@ -32,12 +32,12 @@ internal class S3OutputStreamTest {
                 CreateMultipartUploadRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .build()
+                    .build(),
             )
         } returns CompletableFuture.completedFuture(
             CreateMultipartUploadResponse.builder()
                 .uploadId(uploadID)
-                .build()
+                .build(),
         )
         every {
             uploadPart(
@@ -49,12 +49,12 @@ internal class S3OutputStreamTest {
                     .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
                     .partNumber(1)
                     .build(),
-                any<AsyncRequestBody>()
+                any<AsyncRequestBody>(),
             )
         } returns CompletableFuture.completedFuture(
             UploadPartResponse.builder()
                 .eTag("70bc8f4b72a86921468bf8e8441dce51")
-                .build()
+                .build(),
         )
         every {
             completeMultipartUpload(
@@ -68,18 +68,18 @@ internal class S3OutputStreamTest {
                                 CompletedPart.builder()
                                     .partNumber(1)
                                     .eTag("70bc8f4b72a86921468bf8e8441dce51")
-                                    .build()
+                                    .build(),
                             )
-                            .build()
+                            .build(),
                     )
-                    .build()
+                    .build(),
             )
         } returns CompletableFuture.completedFuture(
             CompleteMultipartUploadResponse.builder()
                 .bucket(bucket)
                 .key(key)
                 .eTag("057ab97180cd57d1c51ff5280884cbf8-1")
-                .build()
+                .build(),
         )
         every {
             abortMultipartUpload(
@@ -87,11 +87,11 @@ internal class S3OutputStreamTest {
                     .bucket(bucket)
                     .key(key)
                     .uploadId(uploadID)
-                    .build()
+                    .build(),
             )
         } returns CompletableFuture.completedFuture(
             AbortMultipartUploadResponse.builder()
-                .build()
+                .build(),
         )
     }
 
@@ -108,7 +108,7 @@ internal class S3OutputStreamTest {
                 CreateMultipartUploadRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .build()
+                    .build(),
             )
             s3.uploadPart(
                 UploadPartRequest.builder()
@@ -119,7 +119,7 @@ internal class S3OutputStreamTest {
                     .partNumber(1)
                     .uploadId(uploadID)
                     .build(),
-                any<AsyncRequestBody>()
+                any<AsyncRequestBody>(),
             )
             s3.completeMultipartUpload(
                 CompleteMultipartUploadRequest.builder()
@@ -132,11 +132,11 @@ internal class S3OutputStreamTest {
                                 CompletedPart.builder()
                                     .eTag("70bc8f4b72a86921468bf8e8441dce51")
                                     .partNumber(1)
-                                    .build()
+                                    .build(),
                             )
-                            .build()
+                            .build(),
                     )
-                    .build()
+                    .build(),
             )
         }
 
@@ -146,7 +146,7 @@ internal class S3OutputStreamTest {
                     .bucket(bucket)
                     .key(key)
                     .uploadId(uploadID)
-                    .build()
+                    .build(),
             )
         }
 
@@ -165,7 +165,7 @@ internal class S3OutputStreamTest {
                     .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
                     .partNumber(1)
                     .build(),
-                any<AsyncRequestBody>()
+                any<AsyncRequestBody>(),
             )
         } throws SdkClientException.create("write timeout")
 
@@ -182,7 +182,7 @@ internal class S3OutputStreamTest {
                 CreateMultipartUploadRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .build()
+                    .build(),
             )
             s3.uploadPart(
                 UploadPartRequest.builder()
@@ -193,7 +193,7 @@ internal class S3OutputStreamTest {
                     .partNumber(1)
                     .uploadId(uploadID)
                     .build(),
-                any<AsyncRequestBody>()
+                any<AsyncRequestBody>(),
             )
         }
 
@@ -203,7 +203,7 @@ internal class S3OutputStreamTest {
                     .bucket(bucket)
                     .key(key)
                     .uploadId(uploadID)
-                    .build()
+                    .build(),
             )
         }
 

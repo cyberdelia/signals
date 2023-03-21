@@ -51,7 +51,7 @@ internal data class Part(
     val uploadID: String,
     val partNumber: Int,
     val digest: ByteArray,
-    val buffer: ByteArray
+    val buffer: ByteArray,
 ) {
     val eTag: String = digest.toHex()
     val contentMD5: String = digest.encodeToString()
@@ -60,12 +60,12 @@ internal data class Part(
         uploadID: String,
         partNumber: Int,
         digest: DigestOutputStream,
-        buffer: ByteArrayOutputStream
+        buffer: ByteArrayOutputStream,
     ) : this(
         uploadID,
         partNumber,
         digest.digest,
-        buffer.toByteArray()
+        buffer.toByteArray(),
     )
 
     fun toCompletedPart(): CompletedPart = CompletedPart.builder()
