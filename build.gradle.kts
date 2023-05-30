@@ -5,7 +5,7 @@ plugins {
     `java-library`
     `maven-publish`
 
-    id("org.jmailen.kotlinter") version "3.14.0"
+    id("org.jmailen.kotlinter") version "3.15.0"
     id("org.jetbrains.dokka") version "1.8.10"
 }
 
