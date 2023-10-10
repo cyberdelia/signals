@@ -26,74 +26,79 @@ internal class S3OutputStreamTest {
     private val uploadID = "upload-id"
     private val bucket = "bucket"
     private val key = "key"
-    private val s3: S3AsyncClient = mockk {
-        every {
-            createMultipartUpload(
-                CreateMultipartUploadRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build(),
-            )
-        } returns CompletableFuture.completedFuture(
-            CreateMultipartUploadResponse.builder()
-                .uploadId(uploadID)
-                .build(),
-        )
-        every {
-            uploadPart(
-                UploadPartRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .uploadId(uploadID)
-                    .contentLength(32)
-                    .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
-                    .partNumber(1)
-                    .build(),
-                any<AsyncRequestBody>(),
-            )
-        } returns CompletableFuture.completedFuture(
-            UploadPartResponse.builder()
-                .eTag("70bc8f4b72a86921468bf8e8441dce51")
-                .build(),
-        )
-        every {
-            completeMultipartUpload(
-                CompleteMultipartUploadRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .uploadId(uploadID)
-                    .multipartUpload(
-                        CompletedMultipartUpload.builder()
-                            .parts(
-                                CompletedPart.builder()
-                                    .partNumber(1)
-                                    .eTag("70bc8f4b72a86921468bf8e8441dce51")
-                                    .build(),
-                            )
-                            .build(),
-                    )
-                    .build(),
-            )
-        } returns CompletableFuture.completedFuture(
-            CompleteMultipartUploadResponse.builder()
-                .bucket(bucket)
-                .key(key)
-                .eTag("057ab97180cd57d1c51ff5280884cbf8-1")
-                .build(),
-        )
-        every {
-            abortMultipartUpload(
-                AbortMultipartUploadRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .uploadId(uploadID)
-                    .build(),
-            )
-        } returns CompletableFuture.completedFuture(
-            AbortMultipartUploadResponse.builder()
-                .build(),
-        )
-    }
+    private val s3: S3AsyncClient =
+        mockk {
+            every {
+                createMultipartUpload(
+                    CreateMultipartUploadRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .build(),
+                )
+            } returns
+                CompletableFuture.completedFuture(
+                    CreateMultipartUploadResponse.builder()
+                        .uploadId(uploadID)
+                        .build(),
+                )
+            every {
+                uploadPart(
+                    UploadPartRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .uploadId(uploadID)
+                        .contentLength(32)
+                        .contentMD5("cLyPS3KoaSFGi/joRB3OUQ==")
+                        .partNumber(1)
+                        .build(),
+                    any<AsyncRequestBody>(),
+                )
+            } returns
+                CompletableFuture.completedFuture(
+                    UploadPartResponse.builder()
+                        .eTag("70bc8f4b72a86921468bf8e8441dce51")
+                        .build(),
+                )
+            every {
+                completeMultipartUpload(
+                    CompleteMultipartUploadRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .uploadId(uploadID)
+                        .multipartUpload(
+                            CompletedMultipartUpload.builder()
+                                .parts(
+                                    CompletedPart.builder()
+                                        .partNumber(1)
+                                        .eTag("70bc8f4b72a86921468bf8e8441dce51")
+                                        .build(),
+                                )
+                                .build(),
+                        )
+                        .build(),
+                )
+            } returns
+                CompletableFuture.completedFuture(
+                    CompleteMultipartUploadResponse.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .eTag("057ab97180cd57d1c51ff5280884cbf8-1")
+                        .build(),
+                )
+            every {
+                abortMultipartUpload(
+                    AbortMultipartUploadRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .uploadId(uploadID)
+                        .build(),
+                )
+            } returns
+                CompletableFuture.completedFuture(
+                    AbortMultipartUploadResponse.builder()
+                        .build(),
+                )
+        }
 
     @Test
     fun `uploads a file`() {

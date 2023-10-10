@@ -16,13 +16,14 @@ private const val GROWTH_FACTOR: Long = 1530L
  * defaults for small to medium file sizes.
  */
 public class DefaultChunker : Chunker {
-    override fun iterator(): Iterator<Long> = sequence {
-        var chunkSize = MIN_PART_SIZE
-        while (true) {
-            yield(chunkSize)
-            chunkSize = min(chunkSize + chunkSize / GROWTH_FACTOR, MAX_PART_SIZE)
-        }
-    }.iterator()
+    override fun iterator(): Iterator<Long> =
+        sequence {
+            var chunkSize = MIN_PART_SIZE
+            while (true) {
+                yield(chunkSize)
+                chunkSize = min(chunkSize + chunkSize / GROWTH_FACTOR, MAX_PART_SIZE)
+            }
+        }.iterator()
 }
 
 internal class SizeIterator(chunker: Chunker) {
@@ -37,7 +38,10 @@ internal class SizeIterator(chunker: Chunker) {
     }
 }
 
-internal fun byteRange(chunker: Chunker, size: Long) = sequence {
+internal fun byteRange(
+    chunker: Chunker,
+    size: Long,
+) = sequence {
     val iterator = chunker.iterator()
     var begin = 0L
     while (begin < size) {
@@ -68,10 +72,11 @@ internal data class Part(
         buffer.toByteArray(),
     )
 
-    fun toCompletedPart(): CompletedPart = CompletedPart.builder()
-        .eTag(eTag)
-        .partNumber(partNumber)
-        .build()
+    fun toCompletedPart(): CompletedPart =
+        CompletedPart.builder()
+            .eTag(eTag)
+            .partNumber(partNumber)
+            .build()
 
     override fun toString(): String {
         return "Part(uploadID=$uploadID, partNumber=$partNumber, eTag=$eTag}"

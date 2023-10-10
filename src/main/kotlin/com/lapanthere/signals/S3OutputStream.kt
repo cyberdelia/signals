@@ -69,32 +69,34 @@ public class S3OutputStream(
         }
     }
 
-    private fun uploadPart() = runBlocking {
-        semaphore.acquire()
-        partSize.next()
-        val part = Part(uploadID, parts.size + 1, digest, buffer)
-        parts.add(
-            scope.async(CoroutineName("part-${part.partNumber}")) {
-                val response = s3.uploadPart(
-                    UploadPartRequest.builder()
-                        .bucket(bucket)
-                        .key(key)
-                        .partNumber(part.partNumber)
-                        .uploadId(uploadID)
-                        .contentMD5(part.contentMD5)
-                        .contentLength(part.buffer.size.toLong())
-                        .build(),
-                    AsyncRequestBody.fromBytes(part.buffer),
-                ).await()
-                if (response.eTag != part.eTag) {
-                    throw IOException("mismatching checksum: ${response.eTag} != ${part.eTag}")
-                }
-                semaphore.release()
-                part.toCompletedPart()
-            },
-        )
-        buffer.reset()
-    }
+    private fun uploadPart() =
+        runBlocking {
+            semaphore.acquire()
+            partSize.next()
+            val part = Part(uploadID, parts.size + 1, digest, buffer)
+            parts.add(
+                scope.async(CoroutineName("part-${part.partNumber}")) {
+                    val response =
+                        s3.uploadPart(
+                            UploadPartRequest.builder()
+                                .bucket(bucket)
+                                .key(key)
+                                .partNumber(part.partNumber)
+                                .uploadId(uploadID)
+                                .contentMD5(part.contentMD5)
+                                .contentLength(part.buffer.size.toLong())
+                                .build(),
+                            AsyncRequestBody.fromBytes(part.buffer),
+                        ).await()
+                    if (response.eTag != part.eTag) {
+                        throw IOException("mismatching checksum: ${response.eTag} != ${part.eTag}")
+                    }
+                    semaphore.release()
+                    part.toCompletedPart()
+                },
+            )
+            buffer.reset()
+        }
 
     override fun close() {
         uploadPart()
@@ -102,32 +104,34 @@ public class S3OutputStream(
         digest.close()
     }
 
-    private fun complete() = runBlocking {
-        try {
-            val parts = parts.awaitAll()
-            val response = s3.completeMultipartUpload(
-                CompleteMultipartUploadRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .uploadId(uploadID)
-                    .multipartUpload(
-                        CompletedMultipartUpload.builder()
-                            .parts(parts)
+    private fun complete() =
+        runBlocking {
+            try {
+                val parts = parts.awaitAll()
+                val response =
+                    s3.completeMultipartUpload(
+                        CompleteMultipartUploadRequest.builder()
+                            .bucket(bucket)
+                            .key(key)
+                            .uploadId(uploadID)
+                            .multipartUpload(
+                                CompletedMultipartUpload.builder()
+                                    .parts(parts)
+                                    .build(),
+                            )
                             .build(),
-                    )
-                    .build(),
-            ).await()
-            if (response.eTag != parts.eTag) {
-                throw IOException("mismatching checksum: ${response.eTag} != ${parts.eTag}")
+                    ).await()
+                if (response.eTag != parts.eTag) {
+                    throw IOException("mismatching checksum: ${response.eTag} != ${parts.eTag}")
+                }
+                if (response.count != parts.size) {
+                    throw IOException("unexpected parts count: ${response.count} != ${parts.size}")
+                }
+            } catch (e: Exception) {
+                abort()
+                throw e
             }
-            if (response.count != parts.size) {
-                throw IOException("unexpected parts count: ${response.count} != ${parts.size}")
-            }
-        } catch (e: Exception) {
-            abort()
-            throw e
         }
-    }
 
     private suspend fun abort() {
         s3.abortMultipartUpload(

@@ -19,11 +19,13 @@ internal class InputStreamAsyncResponseTransformerTest {
         val future = transformer.prepare()
         transformer.onResponse(GetObjectResponse.builder().build())
         transformer.onStream { subscriber: Subscriber<in ByteBuffer> ->
-            subscriber.onSubscribe(object : Subscription {
-                override fun request(l: Long) {}
+            subscriber.onSubscribe(
+                object : Subscription {
+                    override fun request(l: Long) {}
 
-                override fun cancel() {}
-            })
+                    override fun cancel() {}
+                },
+            )
             subscriber.onError(RuntimeException("unexpected exception"))
         }
         val inputStream = future.get()
@@ -48,14 +50,16 @@ internal class InputStreamAsyncResponseTransformerTest {
         val future = transformer.prepare()
         transformer.onResponse(GetObjectResponse.builder().build())
         transformer.onStream { subscriber: Subscriber<in ByteBuffer> ->
-            subscriber.onSubscribe(object : Subscription {
-                override fun request(l: Long) {
-                    subscriber.onNext(ByteBuffer.wrap(Random.nextBytes(30_000)))
-                    subscriber.onComplete()
-                }
+            subscriber.onSubscribe(
+                object : Subscription {
+                    override fun request(l: Long) {
+                        subscriber.onNext(ByteBuffer.wrap(Random.nextBytes(30_000)))
+                        subscriber.onComplete()
+                    }
 
-                override fun cancel() {}
-            })
+                    override fun cancel() {}
+                },
+            )
         }
         val inputStream = future.get()
         inputStream.use {
@@ -66,6 +70,7 @@ internal class InputStreamAsyncResponseTransformerTest {
     }
 }
 
-internal val nullOutputStream = object : OutputStream() {
-    override fun write(b: Int) {}
-}
+internal val nullOutputStream =
+    object : OutputStream() {
+        override fun write(b: Int) {}
+    }
