@@ -38,26 +38,28 @@ public class S3InputStream(
     chunker: Chunker = DefaultChunker(),
     mutator: (GetObjectRequest.Builder) -> Unit = {},
 ) : InputStream(), CoroutineScope {
-    private val s3Object = s3.headObject(
-        HeadObjectRequest.builder()
-            .bucket(bucket)
-            .key(key)
-            .build(),
-    ).get()
+    private val s3Object =
+        s3.headObject(
+            HeadObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build(),
+        ).get()
     private val parts = byteRange(chunker, s3Object.contentLength())
-    private val streams = parts.mapIndexed { i, (begin, end) ->
-        async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
-            s3.getObject(
-                GetObjectRequest.builder()
-                    .applyMutation(mutator)
-                    .bucket(bucket)
-                    .key(key)
-                    .range("bytes=$begin-$end")
-                    .build(),
-                InputStreamAsyncResponseTransformer(),
-            ).await()
-        }
-    }.toMutableList()
+    private val streams =
+        parts.mapIndexed { i, (begin, end) ->
+            async(CoroutineName("chunk-${i + 1}"), CoroutineStart.LAZY) {
+                s3.getObject(
+                    GetObjectRequest.builder()
+                        .applyMutation(mutator)
+                        .bucket(bucket)
+                        .key(key)
+                        .range("bytes=$begin-$end")
+                        .build(),
+                    InputStreamAsyncResponseTransformer(),
+                ).await()
+            }
+        }.toMutableList()
     private val buffer: SequenceInputStream by lazy {
         SequenceInputStream(
             object : Enumeration<InputStream> {
@@ -69,9 +71,10 @@ public class S3InputStream(
                     return iterator.hasNext()
                 }
 
-                override fun nextElement(): InputStream = runBlocking {
-                    iterator.use { it.await() }
-                }
+                override fun nextElement(): InputStream =
+                    runBlocking {
+                        iterator.use { it.await() }
+                    }
             },
         )
     }

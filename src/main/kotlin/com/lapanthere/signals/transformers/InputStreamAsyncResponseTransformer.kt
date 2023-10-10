@@ -69,29 +69,39 @@ private class CancellablePipedInputStream(
         }
     }
 
-    override fun available(): Int = run {
-        super.available()
-    }
+    override fun available(): Int =
+        run {
+            super.available()
+        }
 
-    override fun read(b: ByteArray): Int = run {
-        super.read(b)
-    }
+    override fun read(b: ByteArray): Int =
+        run {
+            super.read(b)
+        }
 
-    override fun read(b: ByteArray, off: Int, len: Int): Int = run {
-        super.read(b, off, len)
-    }
+    override fun read(
+        b: ByteArray,
+        off: Int,
+        len: Int,
+    ): Int =
+        run {
+            super.read(b, off, len)
+        }
 
-    override fun read(): Int = run {
-        super.read()
-    }
+    override fun read(): Int =
+        run {
+            super.read()
+        }
 
-    override fun skip(n: Long): Long = run {
-        super.skip(n)
-    }
+    override fun skip(n: Long): Long =
+        run {
+            super.skip(n)
+        }
 
-    override fun close() = finally {
-        super.close()
-    }
+    override fun close() =
+        finally {
+            super.close()
+        }
 }
 
 internal fun ByteBuffer.toByteArray(): ByteArray {

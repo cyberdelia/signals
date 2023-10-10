@@ -24,53 +24,57 @@ internal class S3InputStreamTest {
     private val bucket = "bucket"
     private val key = "key"
     private val date = Instant.now()
-    private val s3: S3AsyncClient = mockk {
-        every {
-            headObject(
-                HeadObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build(),
-            )
-        } returns CompletableFuture.completedFuture(
-            HeadObjectResponse.builder()
-                .contentLength(6_291_456)
-                .contentType("application/json")
-                .contentEncoding("gzip")
-                .contentDisposition("inline")
-                .cacheControl("no-cache")
-                .expires(date)
-                .lastModified(date)
-                .contentLanguage("de-DE")
-                .versionId("L4kqtJlcpXroDTDmpUMLUo")
-                .eTag("d41d8cd98f00b204e9800998ecf8427e-2")
-                .build(),
-        )
-        every {
-            getObject(
-                GetObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .range("bytes=0-5242879")
-                    .build(),
-                any<InputStreamAsyncResponseTransformer>(),
-            )
-        } returns CompletableFuture.completedFuture(
-            ByteArrayInputStream(ByteArray(32)),
-        )
-        every {
-            getObject(
-                GetObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .range("bytes=5242880-10489185")
-                    .build(),
-                any<InputStreamAsyncResponseTransformer>(),
-            )
-        } returns CompletableFuture.completedFuture(
-            ByteArrayInputStream(ByteArray(32)),
-        )
-    }
+    private val s3: S3AsyncClient =
+        mockk {
+            every {
+                headObject(
+                    HeadObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .build(),
+                )
+            } returns
+                CompletableFuture.completedFuture(
+                    HeadObjectResponse.builder()
+                        .contentLength(6_291_456)
+                        .contentType("application/json")
+                        .contentEncoding("gzip")
+                        .contentDisposition("inline")
+                        .cacheControl("no-cache")
+                        .expires(date)
+                        .lastModified(date)
+                        .contentLanguage("de-DE")
+                        .versionId("L4kqtJlcpXroDTDmpUMLUo")
+                        .eTag("d41d8cd98f00b204e9800998ecf8427e-2")
+                        .build(),
+                )
+            every {
+                getObject(
+                    GetObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .range("bytes=0-5242879")
+                        .build(),
+                    any<InputStreamAsyncResponseTransformer>(),
+                )
+            } returns
+                CompletableFuture.completedFuture(
+                    ByteArrayInputStream(ByteArray(32)),
+                )
+            every {
+                getObject(
+                    GetObjectRequest.builder()
+                        .bucket(bucket)
+                        .key(key)
+                        .range("bytes=5242880-10489185")
+                        .build(),
+                    any<InputStreamAsyncResponseTransformer>(),
+                )
+            } returns
+                CompletableFuture.completedFuture(
+                    ByteArrayInputStream(ByteArray(32)),
+                )
+        }
 
     @Test
     fun `download a file`() {
