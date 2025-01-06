@@ -24,7 +24,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 
-    implementation(platform("software.amazon.awssdk:bom:2.29.43"))
+    implementation(platform("software.amazon.awssdk:bom:2.29.46"))
     implementation("software.amazon.awssdk:s3")
     testImplementation("software.amazon.awssdk:sts")
 
